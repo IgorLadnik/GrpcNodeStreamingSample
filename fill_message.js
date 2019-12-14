@@ -26,12 +26,20 @@ function readData() {
 
 function fillMessage(req, messageId, responseType) {
     var message = responses[messageId];
+    if (utils.isDefined(message)) {
+        var d = message.value.response;
+        req.type = d.type;
+        req.payload = d.payload;
+    }
+    else {
+        req.type = defaultMessageType;
+        req.payload = "default payload";
+    }
+
     req.clientId = clientId;
     req.messageId = messageId;
-    req.type = utils.isDefined(message) ? message.type : defaultMessageType;
     req.time = Date.now();
     req.response = utils.isDefined(responseType) ? responseType : defaultResponseType;
-    req.payload = utils.isDefined(message) ? message.payload : "default payload";
 }
 
 exports.setClientId = setClientId;
