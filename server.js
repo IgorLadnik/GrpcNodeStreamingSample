@@ -29,11 +29,11 @@ var fm = require('./fill_message');
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {
-     keepCase: true,
-     longs: String,
-     enums: String,
-     defaults: true,
-     oneofs: true
+         keepCase: true,
+         longs: String,
+         enums: String,
+         defaults: true,
+         oneofs: true
     });
 
 var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
@@ -43,7 +43,7 @@ function createStreaming(req) {
         console.log('res');
         console.log(res);
 
-        fm.fillMessage(req, "payload RESPONSE", res.messageId);
+        fm.fillMessage(req, res.messageId);
         
         console.log('req');
         console.log(req);
@@ -57,24 +57,22 @@ function createStreaming(req) {
  * @return {Server} The new server object
  */
 function getServer() {
-  var server = new grpc.Server();
+    var server = new grpc.Server();
     server.addService(communication.Messaging.service,
         {
             createStreaming: createStreaming
         });
-  return server;
+    return server;
 }
 
 if (require.main === module) {
-  // If this is run as a script, start a server on an unused port
-  var routeServer = getServer();
-  routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
-  var argv = parseArgs(process.argv, { string: 'db_path' });
-  fs.readFile(path.resolve(argv.db_path), function(err, data) {
-    if (err) throw err;
-    feature_list = JSON.parse(data);
+    // If this is run as a script, start a server on an unused port
+    var routeServer = getServer();
+    routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
+
+    fm.readData();
+
     routeServer.start();
-  });
 }
 
 exports.getServer = getServer;

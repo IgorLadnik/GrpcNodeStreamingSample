@@ -1,0 +1,16 @@
+[
+    {
+        "response": {
+            "messageId": "0",
+            "type": "MESSAGETYPE_ORDINARY",
+            "payload": "qqq"
+        }
+    },
+    {
+        "response": {
+            "messageId": "1",
+            "type": "MESSAGETYPE_ORDINARY",
+            "payload": "zzz"
+        }
+    }
+]

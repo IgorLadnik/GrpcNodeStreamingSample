@@ -29,11 +29,12 @@ var fm = require('./fill_message');
 
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
-    {keepCase: true,
-     longs: String,
-     enums: String,
-     defaults: true,
-     oneofs: true
+    {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true
     });
 
 var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
@@ -48,11 +49,11 @@ function runCreateStreaming(callback) {
     req.on('data', res => {
         console.log(res);
 
-        fm.fillMessage(req, "payload REQUEST", messageId++);
+        fm.fillMessage(req, messageId++);
     });
     req.on('end', callback);
 
-    fm.fillMessage(req, "payload REQUEST", messageId++);
+    fm.fillMessage(req, messageId++);
     
     req.write(req);
     req.end();
@@ -66,6 +67,6 @@ function main() {
 }
 
 if (require.main === module) 
-  main();
+    main();
 
 exports.runCreateStreaming = runCreateStreaming;
