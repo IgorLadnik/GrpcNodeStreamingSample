@@ -16,7 +16,7 @@
  *
  */
 
-var PROTO_PATH = __dirname + '/route_guide.proto';
+var PROTO_PATH = __dirname + '/communication.proto';
 
 var async = require('async');
 var fs = require('fs');
@@ -25,6 +25,8 @@ var path = require('path');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
+var fm = require('./fill_message');
+
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {keepCase: true,
@@ -33,42 +35,37 @@ var packageDefinition = protoLoader.loadSync(
      defaults: true,
      oneofs: true
     });
-var routeguide = grpc.loadPackageDefinition(packageDefinition).routeguide;
-var client = new routeguide.RouteGuide('localhost:50051', grpc.credentials.createInsecure());
 
-/**
- * Run the routeChat demo. Send some chat messages, and print any chat messages
- * that are sent from the server.
- * @param {function} callback Called when the demo is complete
- */
-function runRouteChat(callback) {
-  var call = client.routeChat();
-  call.on('data', note => console.log('Got message "' + note.message + '" at ' +
-                          note.location.latitude + ', ' + note.location.longitude));
-  call.on('end', callback);
+var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
+var client = new communication.Messaging('localhost:50052', grpc.credentials.createInsecure());
 
-  var notes =
-           [{ location: { latitude: 0, longitude: 0 }, message: 'First message'  },
-            { location: { latitude: 0, longitude: 1 }, message: 'Second message' },
-            { location: { latitude: 1, longitude: 0 }, message: 'Third message'  },
-            { location: { latitude: 0, longitude: 0 }, message: 'Fourth message' }];
-  for (var i = 0; i < notes.length; i++) {
-    var note = notes[i];
-    console.log('Sending message "' + note.message + '" at ' +
-        note.location.latitude + ', ' + note.location.longitude);
-    call.write(note);
-  }
-  call.end();
+fm.setClientId("680AA939-BC0C-4414-BE0C-B525FBE98DAA");
+
+var messageId = 0;
+
+function runCreateStreaming(callback) {
+    var req = client.createStreaming();
+    req.on('data', res => {
+        console.log(res);
+
+        fm.fillMessage(req, "payload REQUEST", messageId++);
+    });
+    req.on('end', callback);
+
+    fm.fillMessage(req, "payload REQUEST", messageId++);
+    
+    req.write(req);
+    req.end();
 }
 
 /**
  * Run all of the demos in order
  */
 function main() {
-  async.series([ runRouteChat ]);
+    async.series([runCreateStreaming]);
 }
 
 if (require.main === module) 
   main();
 
-exports.runRouteChat = runRouteChat;
+exports.runCreateStreaming = runCreateStreaming;

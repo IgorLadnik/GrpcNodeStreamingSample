@@ -19,11 +19,13 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="fill_message.js" />
     <Content Include="package.json" />
     <Content Include="route_guide_db.json" />
     <Content Include="README.md" />
     <Content Include="route_guide_client.js" />
     <Content Include="route_guide_server.js" />
+    <Content Include="utilities.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />

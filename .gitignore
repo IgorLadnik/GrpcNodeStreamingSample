@@ -3,3 +3,6 @@
 ################################################################################
 
 /.vs/GrpcNodeStreamingSample/v16
+/bin
+/node_modules
+/obj/Debug

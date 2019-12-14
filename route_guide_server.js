@@ -16,7 +16,7 @@
  *
  */
 
-var PROTO_PATH = __dirname + '/route_guide.proto';
+var PROTO_PATH = __dirname + '/communication.proto';
 
 var fs = require('fs');
 var parseArgs = require('minimist');
@@ -24,46 +24,31 @@ var path = require('path');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
+var fm = require('./fill_message');
+
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
-    {keepCase: true,
+    {
+     keepCase: true,
      longs: String,
      enums: String,
      defaults: true,
      oneofs: true
     });
-var routeguide = grpc.loadPackageDefinition(packageDefinition).routeguide;
 
-var route_notes = {};
+var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
 
-/**
- * Turn the point into a dictionary key.
- * @param {point} point The point to use
- * @return {string} The key for an object
- */
-function pointKey(point) {
-  return point.latitude + ' ' + point.longitude;
-}
+function createStreaming(req) {
+    req.on('data', res => {
+        console.log('res');
+        console.log(res);
 
-/**
- * routeChat handler. Receives a stream of message/location pairs, and responds
- * with a stream of all previous messages at each of those locations.
- * @param {Duplex} call The stream for incoming and outgoing messages
- */
-function routeChat(call) {
-    call.on('data', note => {
-    var key = pointKey(note.location);
-    /* For each note sent, respond with all previous notes that correspond to
-     * the same point */
-    if (route_notes.hasOwnProperty(key)) 
-      _.each(route_notes[key], note => call.write(note));
-    else 
-      route_notes[key] = [];
-    
-    // Then add the new note to the list
-    route_notes[key].push(JSON.parse(JSON.stringify(note)));
-  });
-  call.on('end', () => call.end());
+        fm.fillMessage(req, "payload RESPONSE", res.messageId);
+        
+        console.log('req');
+        console.log(req);
+    });
+    req.on('end', () => req.end());
 }
 
 /**
@@ -73,14 +58,17 @@ function routeChat(call) {
  */
 function getServer() {
   var server = new grpc.Server();
-  server.addService(routeguide.RouteGuide.service, {  routeChat: routeChat });
+    server.addService(communication.Messaging.service,
+        {
+            createStreaming: createStreaming
+        });
   return server;
 }
 
 if (require.main === module) {
   // If this is run as a script, start a server on an unused port
   var routeServer = getServer();
-  routeServer.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());
+  routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
   var argv = parseArgs(process.argv, { string: 'db_path' });
   fs.readFile(path.resolve(argv.db_path), function(err, data) {
     if (err) throw err;
