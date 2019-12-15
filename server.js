@@ -47,8 +47,11 @@ function createStreaming(req) {
         
         console.log('req');
         console.log(req);
+
+        req.write(req);
+        req.end();
     });
-    req.on('end', () => req.end());
+    //req.on('end', () => req.end());
 }
 
 /**
