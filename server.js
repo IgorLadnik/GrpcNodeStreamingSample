@@ -20,19 +20,20 @@ var packageDefinition = protoLoader.loadSync(
 
 var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
 
-function createStreaming(req) {
-    req.on('data', res => {
-        console.log('res');
-        console.log(res);
+function createStreaming(outbound) {
+    outbound.on('data', inbound => {
+        console.log('From Client:');
+        console.log(inbound);
 
-        fm.fillMessage(req, res.messageId);
+        fm.fillMessage(outbound, inbound.messageId);
         
-        console.log('req');
-        console.log(req);
+        console.log('To Client:');
+        console.log(outbound);
 
-        req.write(req);
-        req.end();
+        outbound.write(outbound);
+        outbound.end();
     });
+    //outbound.on('end', () => outbound.end());
  }
 
 function getServer() {

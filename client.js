@@ -26,29 +26,32 @@ var client = new communication.Messaging('localhost:50052', grpc.credentials.cre
 fm.setClientId("680AA939-BC0C-4414-BE0C-B525FBE98DAA");
 
 var messageId = 0;
+var outbound;
 
-function runCreateStreaming(callback) {
-    var outbound = client.createStreaming();
-    outbound.on('data', inbound => {
-        console.log(inbound);
-
-        //fm.fillMessage(outbound, messageId++);
-
-        //outbound.write(outbound);
-        //outbound.end();
-    });
-    outbound.on('end', callback);
-
+function createAndSendMessage() {
     fm.fillMessage(outbound, messageId++);
-
     outbound.write(outbound);
     outbound.end();
 }
 
+function runCreateStreaming(callback) {
+    outbound = client.createStreaming();
+    outbound.on('data', inbound => {
+        console.log("From Server:");
+        console.log(inbound);
+
+        //createAndSendMessage();
+
+        runCreateStreaming(callback);
+    });
+}
+
 //function main() {
+async.series([runCreateStreaming]);
+
 setInterval(() => {
     console.log("timer called");
-    async.series([runCreateStreaming]);
+    createAndSendMessage();
 }, 5000);
 
 console.log("Press <Enter> to quit...");
