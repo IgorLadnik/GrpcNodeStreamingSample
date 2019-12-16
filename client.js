@@ -1,21 +1,3 @@
-/*
- *
- * Copyright 2015 gRPC authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 var PROTO_PATH = __dirname + '/communication.proto';
 
 var async = require('async');
@@ -26,7 +8,7 @@ var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 var fm = require('./fill_message');
-var standard_input = process.stdin;
+var stdin = process.stdin;
 
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
@@ -45,63 +27,35 @@ fm.setClientId("680AA939-BC0C-4414-BE0C-B525FBE98DAA");
 
 var messageId = 0;
 
-//function createRequest() { 
-//    var req = client.createStreaming();
-//    req.on('data', res => {
-//        console.log(res);
+function runCreateStreaming(callback) {
+    var outbound = client.createStreaming();
+    outbound.on('data', inbound => {
+        console.log(inbound);
 
-//        fm.fillMessage(req, messageId++);
-//    });
-//    req.on('end', callback);
+        //fm.fillMessage(outbound, messageId++);
 
-//    fm.fillMessage(req, messageId++);
+        //outbound.write(outbound);
+        //outbound.end();
+    });
+    outbound.on('end', callback);
 
-//    req.write(req);
-//    req.end();
+    fm.fillMessage(outbound, messageId++);
 
-//    return req;
+    outbound.write(outbound);
+    outbound.end();
+}
+
+//function main() {
+setInterval(() => {
+    console.log("timer called");
+    async.series([runCreateStreaming]);
+}, 5000);
+
+console.log("Press <Enter> to quit...");
+stdin.on('data', _ => process.exit());
 //}
 
-var proceed = true;
+//if (require.main === module) 
+//    main();
 
-function runCreateStreaming(callback) {
-    //while (proceed) {
-        console.log("    loop...");
-
-        var req = client.createStreaming();
-        req.on('data', res => {
-            console.log(res);
-
-            fm.fillMessage(req, messageId++);
-        });
-        req.on('end', callback);
-
-        fm.fillMessage(req, messageId++);
-
-        req.write(req);
-        req.end();
-
-    //    proceed = false;
-    //}
-}
-
-/**
- * Run all of the demos in order
- */
-function main() {
-    //async.series([runCreateStreaming]);
-
-    setInterval(() => {
-        console.log("setInterval called");
-        //proceed = true;
-        async.series([runCreateStreaming]);
-    }, 5000);
-
-    console.log("Press <Enter> to quit...");
-    standard_input.on('data', _ => process.exit());
-}
-
-if (require.main === module) 
-    main();
-
-exports.runCreateStreaming = runCreateStreaming;
+//exports.runCreateStreaming = runCreateStreaming;
