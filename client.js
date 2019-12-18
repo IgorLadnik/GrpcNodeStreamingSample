@@ -1,13 +1,16 @@
-var PROTO_PATH = __dirname + '/communication.proto';
+const PROTO_PATH = __dirname + '/communication.proto';
+const port = 50052;
+const isSecure = true;
 
 var async = require('async');
 var fs = require('fs');
-var parseArgs = require('minimist');
-var path = require('path');
+//var parseArgs = require('minimist');
+//var path = require('path');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 var fm = require('./messaging');
+var utils = require('./utilities');
 var stdin = process.stdin;
 
 var packageDefinition = protoLoader.loadSync(
@@ -27,10 +30,11 @@ const credentials = grpc.credentials.createSsl(
 );
 
 var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
-//var client = new communication.Messaging('localhost:50052', grpc.credentials.createInsecure());
-var client = new communication.Messaging('localhost:50052', credentials);
+var client = new communication.Messaging('localhost:' + port, isSecure ? credentials : grpc.credentials.createInsecure());
 
-fm.setClientId('680AA939-BC0C-4414-BE0C-B525FBE98DAA');
+var clientId = utils.generateUuid();
+fm.setClientId(clientId);
+console.log("Client: " + clientId);
 
 var messageId = 0;
 var outbound;
@@ -54,10 +58,7 @@ function runCreateStreaming(callback) {
 
 //function main() {
 async.series([runCreateStreaming]);
-
-setInterval(() => {
-    createAndSendMessage();
-}, 5000);
+setInterval(() => createAndSendMessage(), 5000);
 
 console.log('Press <Enter> to quit...');
 stdin.on('data', _ => process.exit());

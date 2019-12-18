@@ -1,8 +1,10 @@
-var PROTO_PATH = __dirname + '/communication.proto';
+const PROTO_PATH = __dirname + '/communication.proto';
+const port = 50052;
+const isSecure = true;
 
 var fs = require('fs');
-var parseArgs = require('minimist');
-var path = require('path');
+//var parseArgs = require('minimist');
+//var path = require('path');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
@@ -38,10 +40,7 @@ function createStreaming(outbound) {
 
 function getServer() {
     var server = new grpc.Server();
-    server.addService(communication.Messaging.service,
-        {
-            createStreaming: createStreaming
-        });
+    server.addService(communication.Messaging.service, { createStreaming: createStreaming });
     return server;
 }
 
@@ -51,14 +50,16 @@ let credentials = grpc.ServerCredentials.createSsl(
         private_key: fs.readFileSync('./certs/server.key')
     }], true);
 
-if (require.main === module) {
-    var routeServer = getServer();
-    //routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
-    routeServer.bind('0.0.0.0:50052', credentials);
+//if (require.main === module) {
+var routeServer = getServer();
+routeServer.bind('0.0.0.0:' + port, isSecure ? credentials : grpc.ServerCredentials.createInsecure());
 
-    fm.readData();
+var s = isSecure ? ' secure messages' : '';
+console.log('GRPC Server listens' + s + ' on port ' + port);
 
-    routeServer.start();
-}
+fm.readData();
+
+routeServer.start();
+//}
 
 exports.getServer = getServer;
