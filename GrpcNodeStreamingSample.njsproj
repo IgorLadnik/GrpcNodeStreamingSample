@@ -20,7 +20,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Content Include="data.json" />
-    <Content Include="fill_message.js" />
+    <Content Include="messaging.js" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="client.js" />

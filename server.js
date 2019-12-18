@@ -6,7 +6,7 @@ var path = require('path');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
-var fm = require('./fill_message');
+var fm = require('./messaging');
 
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
@@ -23,12 +23,12 @@ var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
 function createStreaming(outbound) {
     outbound.on('data', inbound => {
         console.log('From Client:');
-        console.log(inbound);
+        fm.logMessage(inbound);
 
         fm.fillMessage(outbound, inbound.messageId);
         
         console.log('To Client:');
-        console.log(outbound);
+        fm.logMessage(outbound);
 
         outbound.write(outbound);
         outbound.end();
@@ -45,9 +45,16 @@ function getServer() {
     return server;
 }
 
+let credentials = grpc.ServerCredentials.createSsl(
+    fs.readFileSync('./certs/ca.crt'), [{
+        cert_chain: fs.readFileSync('./certs/server.crt'),
+        private_key: fs.readFileSync('./certs/server.key')
+    }], true);
+
 if (require.main === module) {
     var routeServer = getServer();
-    routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
+    //routeServer.bind('0.0.0.0:50052', grpc.ServerCredentials.createInsecure());
+    routeServer.bind('0.0.0.0:50052', credentials);
 
     fm.readData();
 
