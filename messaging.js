@@ -26,7 +26,8 @@ function readData() {
 }
 
 function fillMessage(req, messageId, responseType) {
-    var message = responses[messageId % responses.length];
+    let id = parseInt(messageId);
+    message = utils.isNumber(id) ? responses[id % responses.length] : "zzz";
     if (utils.isDefined(message)) {
         var d = message.value.response;
         req.type = d.type;
@@ -39,7 +40,7 @@ function fillMessage(req, messageId, responseType) {
     }
 
     req.clientId = clientId;
-    req.messageId = messageId;
+    req.messageId = id; //messageId;
     req.time = Date.now();
     req.response = utils.isDefined(responseType) ? responseType : defaultResponseType;
 }

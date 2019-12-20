@@ -21,5 +21,6 @@ function generateUuid() {
 // EXPORT
 module.exports.isEmptyString = isEmptyString;
 module.exports.isDefined = isDefined;
+module.exports.isNumber = isNumber;
 module.exports.isNull = isNull;
 module.exports.generateUuid = generateUuid;

@@ -1,5 +1,5 @@
 const PROTO_PATH = __dirname + '/communication.proto';
-const port = 50052;
+const port = 19019;
 const isSecure = true;
 
 var async = require('async');
@@ -52,7 +52,7 @@ function runCreateStreaming(callback) {
     outbound.on('data', inbound => {
         console.log('From Server:');
         fm.logMessage(inbound);
-        runCreateStreaming(callback);
+        //runCreateStreaming(callback);
     });
 }
 

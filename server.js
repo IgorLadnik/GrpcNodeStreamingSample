@@ -1,5 +1,5 @@
 const PROTO_PATH = __dirname + '/communication.proto';
-const port = 50052;
+const port = 19019;
 const isSecure = true;
 
 var fs = require('fs');
@@ -24,18 +24,19 @@ var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
 
 function createStreaming(outbound) {
     outbound.on('data', inbound => {
-        console.log('From Client:');
-        fm.logMessage(inbound);
+        setTimeout(() => {
+            console.log('From Client:');
+            fm.logMessage(inbound);
 
-        fm.fillMessage(outbound, inbound.messageId);
-        
-        console.log('To Client:');
-        fm.logMessage(outbound);
+            fm.fillMessage(outbound, inbound.messageId);
 
-        outbound.write(outbound);
-        outbound.end();
+            console.log('To Client:');
+            fm.logMessage(outbound);
+
+            outbound.write(outbound);
+        }, 0);       
     });
-    //outbound.on('end', () => outbound.end());
+    outbound.on('end', () => outbound.end());
  }
 
 function getServer() {
@@ -48,7 +49,7 @@ let credentials = grpc.ServerCredentials.createSsl(
     fs.readFileSync('./certs/ca.crt'), [{
         cert_chain: fs.readFileSync('./certs/server.crt'),
         private_key: fs.readFileSync('./certs/server.key')
-    }], true);
+}], true);
 
 //if (require.main === module) {
 var routeServer = getServer();
