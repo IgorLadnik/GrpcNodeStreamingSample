@@ -3,11 +3,6 @@ var parseArgs = require('minimist');
 var path = require('path');
 var utils = require('./utilities');
 
-//const defaultMessageType = 'MESSAGETYPE_ORDINARY';
-//const defaultResponseType = 'RESPONSETYPE_REQUIRED';
-//const defaultMessageStatus = 'MESSAGESTATUS_CREATED';
-//const defaultPayload = '?';
-
 var clientId = '_';
 var responses = [];
 
