@@ -1,6 +1,12 @@
 const PROTO_PATH = __dirname + '/communication.proto';
-const port = 19019;
+const PORT = 19019;
 const isSecure = true;
+
+const MsgIntervalInMs = 5000;
+const PayloadLength = 5;
+const NumOfResponses = 10;
+const NotToBeResponded = 7;
+const Important = 5;
 
 var async = require('async');
 var fs = require('fs');
@@ -9,7 +15,7 @@ var fs = require('fs');
 var _ = require('lodash');
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
-var fm = require('./messaging');
+var fm = require('./logging');
 var utils = require('./utilities');
 var stdin = process.stdin;
 
@@ -30,35 +36,59 @@ const credentials = grpc.credentials.createSsl(
 );
 
 var communication = grpc.loadPackageDefinition(packageDefinition).Communication;
-var client = new communication.Messaging('localhost:' + port, isSecure ? credentials : grpc.credentials.createInsecure());
+var client = new communication.Messaging('localhost:' + PORT, isSecure ? credentials : grpc.credentials.createInsecure());
 
 var clientId = utils.generateUuid();
-fm.setClientId(clientId);
-console.log("Client: " + clientId);
+console.log('Client: ' + clientId);
 
 var messageId = 0;
-var outbound;
+var request;
 
 function createAndSendMessage() {
-    fm.fillMessage(outbound, messageId++);
-    outbound.write(outbound);
-    //?? outbound.end();
+    fillMessage();
+    request.write(request);
+    //?? request.end();
     console.log('To Server:');
-    fm.logMessage(outbound);
+    fm.logMessage(request);
 }
 
 function runCreateStreaming(callback) {
-    outbound = client.createStreaming();
-    outbound.on('data', inbound => {
+    request = client.createStreaming();
+    request.on('data', response => {
         console.log('From Server:');
-        fm.logMessage(inbound);
+        fm.logMessage(response);
         //runCreateStreaming(callback);
     });
 }
 
+function fillMessage() {
+    request.clientId = clientId;
+    request.messageId = messageId.toString();;
+    request.time = Date.now();
+    request.response = 'RESPONSETYPE_NOT_REQUIRED';
+    request.type = 'MESSAGETYPE_ORDINARY';
+    msgIndex = parseInt(messageId) % NumOfResponses;
+    ch1 = ch2 = '';
+    var str = communication.Messaging.MESSAGETYPE_ORDINARY;
+    if (msgIndex !== NotToBeResponded) {
+        ch1 = '?';
+        request.response = 'RESPONSETYPE_REQUIRED';
+    }
+
+    if (msgIndex === Important) {
+        ch2 = '!';
+        request.type = 'MESSAGETYPE_IMPORTANT';
+    }
+
+    defaultPayload = 'abcde';
+    request.payload = defaultPayload + ch1 + ch2;
+
+    messageId++;
+}
+
 //function main() {
 async.series([runCreateStreaming]);
-setInterval(() => createAndSendMessage(), 5000);
+setInterval(() => createAndSendMessage(), MsgIntervalInMs);
 
 console.log('Press <Enter> to quit...');
 stdin.on('data', _ => process.exit());
